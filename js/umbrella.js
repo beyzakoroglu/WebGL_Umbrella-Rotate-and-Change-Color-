@@ -1,5 +1,7 @@
 let rotationAngle = 0.0;  // starting angle
 let isRotating = false;  // to control animation mode
+let lastMouseX = null;
+const sensitivity = 0.02;
 
 const canvas = document.querySelector('canvas');
 const gl = canvas.getContext('webgl2');
@@ -22,8 +24,13 @@ const uRotation = gl.getUniformLocation(program, 'u_rotation');
 // for listening the mouse movements
 canvas.addEventListener('mousemove', (event) => {
     if(isRotating) {
-        const normalizedX = (event.clientX / canvas.width) * 2 - 1;
-        rotationAngle = normalizedX * Math.PI;
+        if(lastMouseX !== null) {
+            const deltaX = event.clientX - lastMouseX;
+            rotationAngle += deltaX * sensitivity;
+        }
+        //const normalizedX = (event.clientX / canvas.width) * 2 - 1;
+        //rotationAngle = normalizedX * Math.PI;
+        lastMouseX = event.clientX;
     }
 });
 

@@ -22,15 +22,15 @@ function triangulate(vertices) {
         return { success: false, triangles, errorMessage };
     }
 
-    console.log("vertices length:");
-    console.log(vertices.length);
+    //console.log("vertices length:");
+    //console.log(vertices.length);
 
     const indexList = [];
     for (let i = 0; i < vertices.length; i++) {
         indexList.push(i);
     }
 
-    console.log('indexList: ', indexList);
+    //console.log('indexList: ', indexList);
 
     // Ear clipping to find triangles
     while (indexList.length > 3) {
@@ -41,7 +41,7 @@ function triangulate(vertices) {
             const b = getItem(indexList, i - 1);
             const c = getItem(indexList, i + 1);
 
-            console.log('checking: ', b, a, c);
+            //console.log('checking: ', b, a, c);
 
             const va = vertices[a];
             const vb = vertices[b];
@@ -51,7 +51,7 @@ function triangulate(vertices) {
             const vector_va_vc = subtractVectors(vc, va);
 
             if (crossProduct(vector_va_vb, vector_va_vc) < 0) {
-                console.log('Not a convex vertex, skip it');
+                //console.log('Not a convex vertex, skip it');
                 continue;
             }
 
@@ -62,18 +62,18 @@ function triangulate(vertices) {
                 if (j === a || j === b || j === c) continue;
 
                 const p = vertices[j];
-                console.log('Is P inside the triangle => ', p);
+                //console.log('Is P inside the triangle => ', p);
 
                 if (isPointInTriangle(p, va, vb, vc)) {
                     isEar = false;
-                    console.log('Yes it is inside the triangle => ', p);
+                    //console.log('Yes it is inside the triangle => ', p);
                     break;
                 }
             }
 
             if (isEar) {
                 // Add the triangle points to the list
-                console.log(b, a, c, ' is triangle');
+                //console.log(b, a, c, ' is triangle');
                 triangles.push(b, a, c);
 
                 // Remove the ear vertex
