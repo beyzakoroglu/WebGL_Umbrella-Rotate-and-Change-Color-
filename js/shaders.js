@@ -19,8 +19,19 @@ const vertexShaderSource = `
 const fragmentShaderSource = `
     precision mediump float;
     uniform vec4 u_color;
-    
+    uniform float u_time; 
+    uniform bool u_isFabric; 
+
     void main() {
-        gl_FragColor = u_color;
+        vec4 color = u_color;
+
+        if (u_isFabric) {
+            float r = abs(sin(u_time * 0.3));
+            float g = abs(sin(u_time * 0.5 + 1.0));
+            float b = abs(sin(u_time * 0.7 + 2.0));
+            color = vec4(r, g, b, 1.0);
+        }
+
+        gl_FragColor = color;
     }
 `;

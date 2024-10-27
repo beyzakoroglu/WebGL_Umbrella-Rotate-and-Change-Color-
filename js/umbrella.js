@@ -2,9 +2,14 @@ let rotationAngle = 0.0;  // starting angle
 let isRotating = false;  // to control animation mode
 let lastMouseX = null;
 const sensitivity = 0.02;
+const defaultFabricColor = [0.9, 0.65, 0.9, 1.0]; // Lilac color
+
+let isColorChanging = false;
+let startTime = 0;
 
 const canvas = document.querySelector('canvas');
 const gl = canvas.getContext('webgl2');
+
 
 gl.viewport(0, 0, canvas.width, canvas.height);
 gl.clearColor(1.0, 1.0, 1.0, 1.0);
@@ -20,6 +25,8 @@ if (!program) {
 console.log('Shader program initialized successfully.');
 
 const uRotation = gl.getUniformLocation(program, 'u_rotation');
+const uTime = gl.getUniformLocation(program, 'u_time');
+
 
 // for listening the mouse movements
 canvas.addEventListener('mousemove', (event) => {
@@ -28,18 +35,27 @@ canvas.addEventListener('mousemove', (event) => {
             const deltaX = event.clientX - lastMouseX;
             rotationAngle += deltaX * sensitivity;
         }
-        //const normalizedX = (event.clientX / canvas.width) * 2 - 1;
-        //rotationAngle = normalizedX * Math.PI;
         lastMouseX = event.clientX;
     }
 });
 
+
+
 document.addEventListener('keydown', (event) => {
     if(event.key === 'r') {
         rotationAngle = 0.0;
+        isColorChanging = false;
         isRotating = false;
+        const uColor = gl.getUniformLocation(program, 'u_color');
+        gl.uniform4fv(uColor, defaultFabricColor);
     } else if (event.key === 'm') {
         isRotating = true;
+    } else if (event.key === 'c') {
+        isRotating = true;
+        isColorChanging = true;
+        if (isColorChanging) {
+            startTime = performance.now();
+        }
     }
 });
 
@@ -50,6 +66,13 @@ function drawUmbrella() {
 
     //send the rotation angle to the shader
     gl.uniform1f(uRotation, rotationAngle);
+
+    if (isColorChanging) {
+        const currentTime = (performance.now() - startTime) / 25.0;
+        gl.uniform1f(uTime, currentTime);
+    } else {
+        gl.uniform1f(uTime, 0.0);
+    }
 
     //draw the umbrella
     drawHandle();
@@ -63,6 +86,8 @@ drawUmbrella();
 
 // Draw and triangulate the handle
 function drawHandle() {
+    const uIsFabric = gl.getUniformLocation(program, 'u_isFabric');
+    gl.uniform1i(uIsFabric, 0);
 
     const upperBodyCurve = calculateBezierCurve(
         { x: -0.04, y: 0.7 }, { x: 0.0, y: 0.75 }, { x: 0.04, y: 0.7 }
@@ -115,12 +140,11 @@ function drawHandle() {
     gl.drawArrays(gl.TRIANGLES, 0, positions.length / 2);
 }
 
-// Call the draw function
-//drawHandle();
-
-
 // Draw and triangulate the handle
 function drawFabric() {
+    const uIsFabric = gl.getUniformLocation(program, 'u_isFabric');
+    gl.uniform1i(uIsFabric, 1);
+
     const fabricVertices = [];
 
     const fabricUpperCurve = calculateBezierCurve(
@@ -171,13 +195,11 @@ function drawFabric() {
         console.error('Failed to get the uniform location of u_color.');
         return;
     }
-    gl.uniform4f(uColor, 0.9, 0.65, 0.9, 1.0); // Lilac color
+    gl.uniform4fv(uColor, defaultFabricColor); // Lilac color
 
     // Draw the triangles
     gl.drawArrays(gl.TRIANGLES, 0, positions.length / 2);
 }
-
-//drawFabric();
 
 // Bézier Curve calculation
 function calculateBezierCurve(p0, p1, p2, numPoints = 30) {
