@@ -1,9 +1,12 @@
+let rotationAngle = 0.0;  // starting angle
+let isRotating = false;  // to control animation mode
+
 const canvas = document.querySelector('canvas');
 const gl = canvas.getContext('webgl2');
 
 gl.viewport(0, 0, canvas.width, canvas.height);
 gl.clearColor(1.0, 1.0, 1.0, 1.0);
-gl.clear(gl.COLOR_BUFFER_BIT);
+//gl.clear(gl.COLOR_BUFFER_BIT);
 
 // Create the shader program
 const program = createShaderProgram(gl, vertexShaderSource, fragmentShaderSource);
@@ -14,7 +17,42 @@ if (!program) {
 
 console.log('Shader program initialized successfully.');
 
+const uRotation = gl.getUniformLocation(program, 'u_rotation');
+
+// for listening the mouse movements
+canvas.addEventListener('mousemove', (event) => {
+    if(isRotating) {
+        const normalizedX = (event.clientX / canvas.width) * 2 - 1;
+        rotationAngle = normalizedX * Math.PI;
+    }
+});
+
+document.addEventListener('keydown', (event) => {
+    if(event.key === 'r') {
+        rotationAngle = 0.0;
+        isRotating = false;
+    } else if (event.key === 'm') {
+        isRotating = true;
+    }
+});
+
 gl.useProgram(program);
+
+function drawUmbrella() {
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    //send the rotation angle to the shader
+    gl.uniform1f(uRotation, rotationAngle);
+
+    //draw the umbrella
+    drawHandle();
+    drawFabric();
+
+    requestAnimationFrame(drawUmbrella);
+
+}
+
+drawUmbrella();
 
 // Draw and triangulate the handle
 function drawHandle() {
@@ -71,7 +109,7 @@ function drawHandle() {
 }
 
 // Call the draw function
-drawHandle();
+//drawHandle();
 
 
 // Draw and triangulate the handle
@@ -132,7 +170,7 @@ function drawFabric() {
     gl.drawArrays(gl.TRIANGLES, 0, positions.length / 2);
 }
 
-drawFabric();
+//drawFabric();
 
 // Bézier Curve calculation
 function calculateBezierCurve(p0, p1, p2, numPoints = 30) {
