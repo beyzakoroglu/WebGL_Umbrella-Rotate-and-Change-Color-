@@ -25,7 +25,7 @@ const fragmentShaderSource = `
     void main() {
         vec4 color = u_color;
 
-        if (u_isFabric) {
+        if (u_isFabric && u_time != 0.0) {
             float r = abs(sin(u_time * 0.3));
             float g = abs(sin(u_time * 0.5 + 1.0));
             float b = abs(sin(u_time * 0.7 + 2.0));

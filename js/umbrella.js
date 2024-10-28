@@ -26,7 +26,7 @@ console.log('Shader program initialized successfully.');
 
 const uRotation = gl.getUniformLocation(program, 'u_rotation');
 const uTime = gl.getUniformLocation(program, 'u_time');
-
+const uColor = gl.getUniformLocation(program, 'u_color');
 
 // for listening the mouse movements
 canvas.addEventListener('mousemove', (event) => {
@@ -46,7 +46,6 @@ document.addEventListener('keydown', (event) => {
         rotationAngle = 0.0;
         isColorChanging = false;
         isRotating = false;
-        const uColor = gl.getUniformLocation(program, 'u_color');
         gl.uniform4fv(uColor, defaultFabricColor);
     } else if (event.key === 'm') {
         isRotating = true;
@@ -129,7 +128,7 @@ function drawHandle() {
     gl.enableVertexAttribArray(aPosition);
 
     // Set the color for the triangles
-    const uColor = gl.getUniformLocation(program, 'u_color');
+    //const uColor = gl.getUniformLocation(program, 'u_color');
     if (uColor === -1) {
         console.error('Failed to get the uniform location of u_color.');
         return;
@@ -190,7 +189,7 @@ function drawFabric() {
     gl.enableVertexAttribArray(aPosition);
 
     // Set the color for the triangles
-    const uColor = gl.getUniformLocation(program, 'u_color');
+    //const uColor = gl.getUniformLocation(program, 'u_color');
     if (uColor === -1) {
         console.error('Failed to get the uniform location of u_color.');
         return;
