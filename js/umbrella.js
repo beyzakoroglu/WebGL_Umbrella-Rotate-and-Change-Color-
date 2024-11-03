@@ -38,7 +38,7 @@ canvas.addEventListener('mousemove', (event) => {
     const distanceFromCenterX = mouseX - centerX;
 
     // calculate the speed
-    rotationSpeed = distanceFromCenterX * 0.001;
+    rotationSpeed = distanceFromCenterX * 0.0005;
 });
 
 
