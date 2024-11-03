@@ -1,8 +1,7 @@
 let rotationAngle = 0.0;  // starting angle
 let isRotating = false;  // to control animation mode
-let lastMouseX = null;
-const sensitivity = 0.02;
-const defaultFabricColor = [0.9, 0.65, 0.9, 1.0]; // Lilac color
+const defaultFabricColor = [0.9, 0.65, 0.9, 1.0]; // lilac color
+let rotationSpeed = 0.0;
 
 let isColorChanging = false;
 let startTime = 0;
@@ -13,9 +12,9 @@ const gl = canvas.getContext('webgl2');
 
 gl.viewport(0, 0, canvas.width, canvas.height);
 gl.clearColor(1.0, 1.0, 1.0, 1.0);
-//gl.clear(gl.COLOR_BUFFER_BIT);
+gl.clear(gl.COLOR_BUFFER_BIT);
 
-// Create the shader program
+// create the shader program
 const program = createShaderProgram(gl, vertexShaderSource, fragmentShaderSource);
 
 if (!program) {
@@ -28,22 +27,25 @@ const uRotation = gl.getUniformLocation(program, 'u_rotation');
 const uTime = gl.getUniformLocation(program, 'u_time');
 const uColor = gl.getUniformLocation(program, 'u_color');
 
+
 // for listening the mouse movements
 canvas.addEventListener('mousemove', (event) => {
-    if(isRotating) {
-        if(lastMouseX !== null) {
-            const deltaX = event.clientX - lastMouseX;
-            rotationAngle += deltaX * sensitivity;
-        }
-        lastMouseX = event.clientX;
-    }
+    // center of the canvas
+    const centerX = canvas.width / 2;
+
+    // mouse x position
+    const mouseX = event.clientX;
+    const distanceFromCenterX = mouseX - centerX;
+
+    // calculate the speed
+    rotationSpeed = distanceFromCenterX * 0.001;
 });
 
 
-
 document.addEventListener('keydown', (event) => {
-    if(event.key === 'r') {
+    if (event.key === 'r') {
         rotationAngle = 0.0;
+        rotationSpeed = 0.0;
         isColorChanging = false;
         isRotating = false;
         gl.uniform4fv(uColor, defaultFabricColor);
@@ -61,9 +63,11 @@ document.addEventListener('keydown', (event) => {
 gl.useProgram(program);
 
 function drawUmbrella() {
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    if (isRotating) {
+        rotationAngle += rotationSpeed;
+    }
 
-    //send the rotation angle to the shader
+    // send the rotation angle to the shader
     gl.uniform1f(uRotation, rotationAngle);
 
     if (isColorChanging) {
@@ -73,7 +77,7 @@ function drawUmbrella() {
         gl.uniform1f(uTime, 0.0);
     }
 
-    //draw the umbrella
+    // draw umbrella components
     drawHandle();
     drawFabric();
 
@@ -83,7 +87,7 @@ function drawUmbrella() {
 
 drawUmbrella();
 
-// Draw and triangulate the handle
+// draw and triangulate the handle
 function drawHandle() {
     const uIsFabric = gl.getUniformLocation(program, 'u_isFabric');
     gl.uniform1i(uIsFabric, 0);
@@ -103,7 +107,7 @@ function drawHandle() {
     const handleVertices = [];
     handleVertices.push(...upperBodyCurve, ...handleCurve, ...handleInnerCurve);
 
-    // Perform polygon triangulation
+    // perform polygon triangulation
     const result = triangulate(handleVertices);
     if (!result || !result.success) {
         console.error(result?.errorMessage || 'Triangulation failed.');
@@ -111,7 +115,7 @@ function drawHandle() {
     }
     const triangles = result.triangles;
 
-    // Flatten the triangulated handleVertices for WebGL
+    // flatten the triangulated handleVertices for WebGL
     const positions = new Float32Array(triangles.length * 2);
     let posIndex = 0;
     for (const index of triangles) {
@@ -119,27 +123,27 @@ function drawHandle() {
         positions[posIndex++] = handleVertices[index].y;
     }
 
-    // Initialize the buffer with triangle data
+    // initialize the buffer with triangle data
     const positionBuffer = initBuffer(gl, positions);
-    // Bind the buffer to the attribute
+    // bind the buffer to the attribute
     const aPosition = gl.getAttribLocation(program, 'a_position');
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(aPosition);
 
-    // Set the color for the triangles
-    //const uColor = gl.getUniformLocation(program, 'u_color');
+    // set the color for the triangles
     if (uColor === -1) {
         console.error('Failed to get the uniform location of u_color.');
         return;
     }
-    gl.uniform4f(uColor, 0.3, 0.2, 0.6, 1.0); // Dark purple color
+    // dark purple color
+    gl.uniform4f(uColor, 0.3, 0.2, 0.6, 1.0);
 
-    // Draw the triangles
+    // draw the triangles
     gl.drawArrays(gl.TRIANGLES, 0, positions.length / 2);
 }
 
-// Draw and triangulate the handle
+// draw and triangulate the handle
 function drawFabric() {
     const uIsFabric = gl.getUniformLocation(program, 'u_isFabric');
     gl.uniform1i(uIsFabric, 1);
@@ -164,7 +168,7 @@ function drawFabric() {
 
     fabricVertices.push(...fabricUpperCurve, ...fabricInnerCurve1, ...fabricInnerCurve2, ...fabricInnerCurve3);
 
-    // Perform polygon triangulation
+    // perform polygon triangulation
     const result = triangulate(fabricVertices);
     if (!result || !result.success) {
         console.error(result?.errorMessage || 'Triangulation failed.');
@@ -172,7 +176,7 @@ function drawFabric() {
     }
     const triangles = result.triangles;
 
-    // Flatten the triangulated fabricVertices for WebGL
+    // flatten the triangulated fabricVertices for WebGL
     const positions = new Float32Array(triangles.length * 2);
     let posIndex = 0;
     for (const index of triangles) {
@@ -180,23 +184,23 @@ function drawFabric() {
         positions[posIndex++] = fabricVertices[index].y;
     }
 
-    // Initialize the buffer with triangle data
+    // initialize the buffer with triangle data
     const positionBuffer2 = initBuffer(gl, positions);
-    // Bind the buffer to the attribute
+    // bind the buffer to the attribute
     const aPosition = gl.getAttribLocation(program, 'a_position');
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer2);
     gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(aPosition);
 
-    // Set the color for the triangles
-    //const uColor = gl.getUniformLocation(program, 'u_color');
+    // set the color for the triangles
     if (uColor === -1) {
         console.error('Failed to get the uniform location of u_color.');
         return;
     }
-    gl.uniform4fv(uColor, defaultFabricColor); // Lilac color
+    // lilac color
+    gl.uniform4fv(uColor, defaultFabricColor);
 
-    // Draw the triangles
+    // draw the triangles
     gl.drawArrays(gl.TRIANGLES, 0, positions.length / 2);
 }
 
